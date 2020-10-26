@@ -1,19 +1,18 @@
 import java.io.*;
-import java.util.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 /**
- * This is the vencrypt class.
+ * This is the vdecrypt class.
  * 
- * Usage: java vencrypt key message cipher
+ * Usage: java vdecrypt key cipher message
  * 
- * Obtains key data from the key. Encrypts the message and writes it into the
- * cipher (in hex).
+ * Obtains key data from the key. Decrypts the cipher and writes it into the
+ * message file.
  * 
  * @author Chris Zachariah
  */
-public class vencrypt {
+public class vdecrypt {
     public static void main(String[] args) {
         // make sure all the fileNames/pathToFiles are given
         if (args.length != 3) {
@@ -27,38 +26,40 @@ public class vencrypt {
 
         // in case an empty key is given
         if (getKey.length() == 0) {
-            System.out.println("An empty key file was given. Cypher and message will be the same.");
+            System.out.println("An empty key file was given. Message and cipher will be the same.");
             key = new char[1];
             key[0] = 0;
         } else {
             System.out.println("Key: '" + getKey + "' , Size: " + getKey.length());
         }
 
-        // now read through the message, figure out the cypher using the key and print out to the cypher
+        // now read through the cipher, figure out the message using the key and print out to the message file
         int placeInKey = 0;
-        try {
-            Scanner scanner = new Scanner(new File(args[1]));       // message
-            OutputStream writer = new FileOutputStream(args[2]);    // cipher
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                for (int i = 0 ; i < line.length() ; ++i) {
-                    int messageChar = line.charAt(i);
+        try {       
+            FileInputStream scanner = new FileInputStream(args[1]); // cipher
+            OutputStream writer = new FileOutputStream(args[2]);    // message
+            int numRead;
+            byte readData[] = new byte[8]; // store the bytes being read
+            do {
+                numRead = scanner.read(readData);
+                for (int i = 0; i < numRead; ++i){
+                    int cipherChar = (int)readData[i];
                     int keyChar = key[placeInKey];
-                    char cypherHex = (char) ((messageChar + keyChar) % 256);
-                    writer.write(cypherHex);
+                    char messageChar = (char)(((cipherChar - keyChar)+256) % 256);
+                    writer.write(messageChar);
                     ++placeInKey;
                     if (placeInKey >= key.length) { // wrap around the key once the pointer reaches the end 
                         placeInKey = 0;
                     }
-                } // ends the for loop
-            } // ends the while loop
+                }
+            } while (numRead != -1);
             scanner.close();
             writer.close();
         } catch (FileNotFoundException ex) {
-            System.out.println("Error opening the message to encrypt.");
+            System.out.println("Error opening the cipher file.");
             ex.printStackTrace();
         } catch (IOException ex) {
-            System.out.println("Error opening the cypher file to write into.");
+            System.out.println("Error opening the message file to write into.");
             ex.printStackTrace();
         }
 
@@ -80,4 +81,4 @@ public class vencrypt {
         return content;
     } // ends the getAllBytes() method
 
-} // ends the vencrypt class
+} // ends the vdecrypt class
