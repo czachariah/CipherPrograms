@@ -1,5 +1,4 @@
 import java.io.*;
-import java.util.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -17,7 +16,7 @@ public class vencrypt {
     public static void main(String[] args) {
         // make sure all the fileNames/pathToFiles are given
         if (args.length != 3) {
-            System.out.println("Incorrect Number of Arguments. Please Try again.");
+            System.out.println("usage: java vencrypt [keyfile] [plaintextfile] [ciphertextfile]");
             return;
         }
 
@@ -27,22 +26,23 @@ public class vencrypt {
 
         // in case an empty key is given
         if (getKey.length() == 0) {
-            System.out.println("An empty key file was given. Cypher and message will be the same.");
-            key = new char[1];
-            key[0] = 0;
+            System.out.println("Empty key file.");
+            return;
         } else {
-            System.out.println("Key: '" + getKey + "' , Size: " + getKey.length());
+            System.out.println("KeyFile:" + args[0] + ", Length: =" + getKey.length());
         }
 
         // now read through the message, figure out the cypher using the key and print out to the cypher
         int placeInKey = 0;
         try {
-            Scanner scanner = new Scanner(new File(args[1]));       // message
+            FileInputStream scanner = new FileInputStream(args[1]); // message
             OutputStream writer = new FileOutputStream(args[2]);    // cipher
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                for (int i = 0 ; i < line.length() ; ++i) {
-                    int messageChar = line.charAt(i);
+            int numRead;
+            byte readData[] = new byte[8]; // store the bytes being read
+            do {
+                numRead = scanner.read(readData);
+                for (int i = 0; i < numRead; ++i){
+                    int messageChar = (int)readData[i];
                     int keyChar = key[placeInKey];
                     char cypherHex = (char) ((messageChar + keyChar) % 256);
                     writer.write(cypherHex);
@@ -50,8 +50,8 @@ public class vencrypt {
                     if (placeInKey >= key.length) { // wrap around the key once the pointer reaches the end 
                         placeInKey = 0;
                     }
-                } // ends the for loop
-            } // ends the while loop
+                }
+            } while (numRead != -1);
             scanner.close();
             writer.close();
         } catch (FileNotFoundException ex) {
@@ -81,3 +81,20 @@ public class vencrypt {
     } // ends the getAllBytes() method
 
 } // ends the vencrypt class
+
+/*
+//Scanner scanner = new Scanner(new File(args[1]));       // message
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                for (int i = 0 ; i < line.length() ; ++i) {
+                    int messageChar = line.charAt(i);
+                    int keyChar = key[placeInKey];
+                    char cypherHex = (char) ((messageChar + keyChar) % 256);
+                    writer.write(cypherHex);
+                    ++placeInKey;
+                    if (placeInKey >= key.length) { // wrap around the key once the pointer reaches the end 
+                        placeInKey = 0;
+                    }
+                } // ends the for loop
+            } // ends the while loop
+            */

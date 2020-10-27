@@ -16,7 +16,7 @@ public class vdecrypt {
     public static void main(String[] args) {
         // make sure all the fileNames/pathToFiles are given
         if (args.length != 3) {
-            System.out.println("Incorrect Number of Arguments. Please Try again.");
+            System.out.println("usage: java vdecrypt [keyfile] [ciphertextfile] [plaintextfile]");
             return;
         }
 
@@ -26,11 +26,10 @@ public class vdecrypt {
 
         // in case an empty key is given
         if (getKey.length() == 0) {
-            System.out.println("An empty key file was given. Message and cipher will be the same.");
-            key = new char[1];
-            key[0] = 0;
+            System.out.println("Empty key file.");
+            return;
         } else {
-            System.out.println("Key: '" + getKey + "' , Size: " + getKey.length());
+            System.out.println("KeyFile:" + args[0] + ", Length: =" + getKey.length());
         }
 
         // now read through the cipher, figure out the message using the key and print out to the message file
