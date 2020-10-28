@@ -1,4 +1,5 @@
 import java.io.*;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -30,6 +31,42 @@ public class scrypt {
         } else {
             System.out.println("using seed=" + seed + " from password=\"" + args[0] + "\"");
         }
+
+        // convert to Big Integer to work with unsigned numbers
+        BigInteger seedToBigNum = new BigInteger(Long.toString(seed));
+        BigInteger firstPsudoRandNum = getPsudoRandNum(seedToBigNum);
+        BigInteger nextPsudoRandNum = firstPsudoRandNum;
+
+        // now iterate through the message and XOR both the message byte and pseudorandom byte
+        try {       
+            FileInputStream scanner = new FileInputStream(args[1]); // cipher
+            OutputStream writer = new FileOutputStream(args[2]);    // message
+            int numRead;
+            byte readData[] = new byte[8]; // store the bytes being read
+            do {
+                numRead = scanner.read(readData);
+                for (int i = 0; i < numRead; ++i){
+                    int messageChar = (int)readData[i];
+                    String messageCharString = Integer.toString(messageChar);
+
+                    BigInteger messageByte = new BigInteger(messageCharString);
+                    BigInteger xorVal = messageByte.xor(nextPsudoRandNum);
+
+                    char byteToWrite = (char)xorVal.intValue();
+                    writer.write(byteToWrite);
+
+                    nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                }
+            } while (numRead != -1);
+            scanner.close();
+            writer.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("Error opening the cipher file.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error opening the message file to write into.");
+            ex.printStackTrace();
+        }
         
         
 
@@ -52,6 +89,11 @@ public class scrypt {
     } // ends the getPassword() method
 
 
+    /**
+     * This method is used in order to obtain the seed number using the password.
+     * @param pass the password
+     * @return the seed number
+     */
     public static long getSeed(String pass) {
         long hash = 0;
         for(int i = 0 ; i < pass.length() ; ++i) {
@@ -60,5 +102,17 @@ public class scrypt {
         }
         return hash;
     } // ends the getSeed() method
+
+    /**
+     * This method will be used in order to calculate a pseudorandom number.
+     * @param num the current pseudorandom number
+     * @return the next pseudorandom number
+     */
+    public static BigInteger getPsudoRandNum(BigInteger numb) {
+        BigInteger a = new BigInteger("1103515245");
+        BigInteger c = new BigInteger("12345");
+        BigInteger m = new BigInteger("256");
+        return numb.multiply(a).add(c).mod(m);
+    } // ends the getPsudoRandNum() method
     
 } // ends the scrypt class
