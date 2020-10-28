@@ -5,8 +5,6 @@ import java.nio.file.Paths;
 /**
  * This is the vdecrypt class.
  * 
- * Usage: java vdecrypt key cipher message
- * 
  * Obtains key data from the key. Decrypts the cipher and writes it into the
  * message file.
  * 
@@ -26,10 +24,10 @@ public class vdecrypt {
 
         // in case an empty key is given
         if (getKey.length() == 0) {
-            System.out.println("Empty key file.");
+            System.out.println("empty key file.");
             return;
         } else {
-            System.out.println("KeyFile:" + args[0] + ", Length: =" + getKey.length());
+            System.out.println("keyFile:" + args[0] + ", length: =" + getKey.length());
         }
 
         // now read through the cipher, figure out the message using the key and print out to the message file

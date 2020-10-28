@@ -5,8 +5,6 @@ import java.nio.file.Paths;
 /**
  * This is the vencrypt class.
  * 
- * Usage: java vencrypt key message cipher
- * 
  * Obtains key data from the key. Encrypts the message and writes it into the
  * cipher (in hex).
  * 
@@ -26,10 +24,10 @@ public class vencrypt {
 
         // in case an empty key is given
         if (getKey.length() == 0) {
-            System.out.println("Empty key file.");
+            System.out.println("empty key file.");
             return;
         } else {
-            System.out.println("KeyFile:" + args[0] + ", Length: =" + getKey.length());
+            System.out.println("keyFile:" + args[0] + ", length: =" + getKey.length());
         }
 
         // now read through the message, figure out the cypher using the key and print out to the cypher
@@ -81,20 +79,3 @@ public class vencrypt {
     } // ends the getAllBytes() method
 
 } // ends the vencrypt class
-
-/*
-//Scanner scanner = new Scanner(new File(args[1]));       // message
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                for (int i = 0 ; i < line.length() ; ++i) {
-                    int messageChar = line.charAt(i);
-                    int keyChar = key[placeInKey];
-                    char cypherHex = (char) ((messageChar + keyChar) % 256);
-                    writer.write(cypherHex);
-                    ++placeInKey;
-                    if (placeInKey >= key.length) { // wrap around the key once the pointer reaches the end 
-                        placeInKey = 0;
-                    }
-                } // ends the for loop
-            } // ends the while loop
-            */
