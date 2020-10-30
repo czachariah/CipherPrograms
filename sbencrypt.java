@@ -32,7 +32,7 @@ public class sbencrypt {
             System.out.println("using seed=" + seed + " from password=\"" + args[0] + "\"");
         }
 
-        // make initilization vector
+        // make initilization vector (used just for the first block of the message)
         BigInteger[] iv = new BigInteger[16];
         BigInteger seedToBigNum = new BigInteger(Long.toString(seed));
         BigInteger firstPsudoRandNum = getPsudoRandNum(seedToBigNum);
@@ -43,7 +43,74 @@ public class sbencrypt {
             nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
         }
 
-        
+        // now iterate through the message and XOR both the message byte and pseudorandom byte
+        try {       
+            FileInputStream scanner = new FileInputStream(args[1]); // cipher
+            OutputStream writer = new FileOutputStream(args[2]);    // message
+            int numBytesRead;
+            int blocksChained = 0;
+            boolean hasPad = false;
+            byte lastBlock[] = new byte[16]; // the last block that was read
+            byte curBlock[] = new byte[16];  // store the bytes being read
+            do {
+                numBytesRead = scanner.read(curBlock);
+                if (blocksChained == 0) { // first block ; use iv
+                    if (numBytesRead > 0 && numBytesRead < 16) { // needs padding at the end
+                        int padNum = 16 - numBytesRead;
+                        int padNumHex = 0x00 + padNum;
+                        for (int i = numBytesRead ; i < 16 ; ++i) {
+                            curBlock[i] = (byte)padNumHex;
+                        }
+                        writer.write(curBlock);
+                        hasPad = true;
+                    } else {
+                        if (numBytesRead != -1) {
+                          writer.write(curBlock);  
+                        }
+                    }
+                    lastBlock = curBlock;
+                    ++blocksChained;
+                } else {
+                    if (numBytesRead > 0 && numBytesRead < 16) { // needs padding at the end
+                        int padNum = 16 - numBytesRead;
+                        int padNumHex = 0x00 + padNum;
+                        for (int i = numBytesRead ; i < 16 ; ++i) {
+                            curBlock[i] = (byte)padNumHex;
+                        }
+                        writer.write(curBlock);
+                        hasPad = true;
+                    } else {
+                        if (numBytesRead != -1) {
+                            writer.write(curBlock);  
+                        }
+                    }
+                    lastBlock = curBlock;
+                    ++blocksChained;
+                }
+
+                // this condition is true if the number of message bytes is a multiple of 16
+                // and needs a whole block at the end
+                if (numBytesRead == -1) {
+                    if (hasPad == false) {
+                        int padNumHex = 0x00 + 16;
+                        for (int i = 0 ; i < 16 ; ++i) {
+                            lastBlock[i] = (byte)padNumHex;
+                        }
+                        writer.write(lastBlock);
+                    }
+                }
+
+            } while (numBytesRead != -1);
+            scanner.close();
+            writer.close();
+        } catch (FileNotFoundException ex) {
+            System.out.println("Error opening the cipher file.");
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            System.out.println("Error opening the message file to write into.");
+            ex.printStackTrace();
+        }
+
 
     } // ends the main() method
 
@@ -91,3 +158,21 @@ public class sbencrypt {
     } // ends the getPsudoRandNum() method
 
 } // ends the sbencrypt class
+
+/*
+
+
+for (int i = 0; i < numBytesRead; ++i){
+                        int messageChar = (int)curBlock[i];
+                        String messageCharString = Integer.toString(messageChar);
+    
+                        BigInteger messageByte = new BigInteger(messageCharString);
+                        BigInteger xorVal = messageByte.xor(nextPsudoRandNum);
+    
+                        char byteToWrite = (char)xorVal.intValue();
+                        writer.write(byteToWrite);
+    
+                        nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                    }
+
+*/
