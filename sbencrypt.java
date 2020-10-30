@@ -61,15 +61,18 @@ public class sbencrypt {
                         for (int i = numBytesRead ; i < 16 ; ++i) {
                             curBlock[i] = (byte)padNumHex;
                         }
-                        // applyb CBC by XORing the curBlock with iv (only since this is the first block)
+
+                        // apply CBC by XORing the curBlock with iv (only since this is the first block)
                         for(int i = 0 ; i < 16 ; ++i) {
                             curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
                         }
+
                         // read next 16 bytes from keystream
                         for(int i = 0 ; i < 16 ; ++i) {
                             nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
                             iv[i] = nextPsudoRandNum;
                         }
+                        
                         // shuffle the bytes based on the keystream data
                         for(int i = 0 ; i < 16 ; ++i) {
                             BigInteger first = new BigInteger(Integer.toString((iv[i].intValue()) & (0xf)));
@@ -78,6 +81,7 @@ public class sbencrypt {
                             curBlock[first.intValue()] = curBlock[second.intValue()];
                             curBlock[second.intValue()] = temp;
                         }
+                        
                         // make the cipher text block by XORing the curBlock with the iv
                         for(int i = 0 ; i < 16 ; ++i) {
                             curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
