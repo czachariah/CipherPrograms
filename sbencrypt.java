@@ -45,8 +45,8 @@ public class sbencrypt {
 
         // now iterate through the message and XOR both the message byte and pseudorandom byte
         try {       
-            FileInputStream scanner = new FileInputStream(args[1]); // cipher
-            OutputStream writer = new FileOutputStream(args[2]);    // message
+            FileInputStream scanner = new FileInputStream(args[1]); // message
+            OutputStream writer = new FileOutputStream(args[2]);    // cipher
             int numBytesRead;
             int blocksChained = 0;
             boolean hasPad = false;
@@ -61,45 +61,187 @@ public class sbencrypt {
                         for (int i = numBytesRead ; i < 16 ; ++i) {
                             curBlock[i] = (byte)padNumHex;
                         }
+                        // applyb CBC by XORing the curBlock with iv (only since this is the first block)
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                        }
+                        // read next 16 bytes from keystream
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                            iv[i] = nextPsudoRandNum;
+                        }
+                        // shuffle the bytes based on the keystream data
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            BigInteger first = new BigInteger(Integer.toString((iv[i].intValue()) & (0xf)));
+                            BigInteger second = new BigInteger(Integer.toString((iv[i].intValue() >> 4) & (0xf)));
+                            byte temp = curBlock[first.intValue()];
+                            curBlock[first.intValue()] = curBlock[second.intValue()];
+                            curBlock[second.intValue()] = temp;
+                        }
+                        // make the cipher text block by XORing the curBlock with the iv
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                        }
+                        // write to the cipher file
                         writer.write(curBlock);
+                        // copy the contents of the curBlock to the lastBlock in order to use in the next iteration
+                        System.arraycopy(curBlock, 0, lastBlock, 0, 16);
+                        ++blocksChained;
                         hasPad = true;
                     } else {
                         if (numBytesRead != -1) {
-                          writer.write(curBlock);  
+                            // applyb CBC by XORing the curBlock with iv (only since this is the first block)
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                            }
+                            // read next 16 bytes from keystream
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                                iv[i] = nextPsudoRandNum;
+                            }
+                            // shuffle the bytes based on the keystream data
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                BigInteger first = new BigInteger(Integer.toString((iv[i].intValue()) & (0xf)));
+                                BigInteger second = new BigInteger(Integer.toString((iv[i].intValue() >> 4) & (0xf)));
+                                byte temp = curBlock[first.intValue()];
+                                curBlock[first.intValue()] = curBlock[second.intValue()];
+                                curBlock[second.intValue()] = temp;
+                            }
+                            // make the cipher text block by XORing the curBlock with the iv
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                            }
+                            // write to the cipher file
+                            writer.write(curBlock); 
+                            // copy the contents of the curBlock to the lastBlock in order to use in the next iteration
+                            System.arraycopy(curBlock, 0, lastBlock, 0, 16);
+                            ++blocksChained; 
                         }
                     }
-                    lastBlock = curBlock;
-                    ++blocksChained;
                 } else {
-                    if (numBytesRead > 0 && numBytesRead < 16) { // needs padding at the end
+                    if (numBytesRead > 0 && numBytesRead < 16) { // needs padding at the end ; here can use the lastBlock
                         int padNum = 16 - numBytesRead;
                         int padNumHex = 0x00 + padNum;
                         for (int i = numBytesRead ; i < 16 ; ++i) {
                             curBlock[i] = (byte)padNumHex;
                         }
+                        // applyb CBC by XORing the curBlock with lastBlock (since this is NOT the first block)
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            curBlock[i] = (byte) ((curBlock[i]) ^ (lastBlock[i]));
+                        }
+                        // read next 16 bytes from keystream
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                            iv[i] = nextPsudoRandNum;
+                        }
+                        // shuffle the bytes based on the keystream data
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            BigInteger first = new BigInteger(Integer.toString((iv[i].intValue()) & (0xf)));
+                            BigInteger second = new BigInteger(Integer.toString((iv[i].intValue() >> 4) & (0xf)));
+                            byte temp = curBlock[first.intValue()];
+                            curBlock[first.intValue()] = curBlock[second.intValue()];
+                            curBlock[second.intValue()] = temp;
+                        }
+                        // make the cipher text block by XORing the curBlock with the iv
+                        for(int i = 0 ; i < 16 ; ++i) {
+                            curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                        }
                         writer.write(curBlock);
+                        System.arraycopy(curBlock, 0, lastBlock, 0, 16);
+                        ++blocksChained;
                         hasPad = true;
                     } else {
                         if (numBytesRead != -1) {
-                            writer.write(curBlock);  
+                            // applyb CBC by XORing the curBlock with lastBlock (since this is NOT the first block)
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (lastBlock[i]));
+                            }
+                            // read next 16 bytes from keystream
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                                iv[i] = nextPsudoRandNum;
+                            }
+                            // shuffle the bytes based on the keystream data
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                BigInteger first = new BigInteger(Integer.toString((iv[i].intValue()) & (0xf)));
+                                BigInteger second = new BigInteger(Integer.toString((iv[i].intValue() >> 4) & (0xf)));
+                                byte temp = curBlock[first.intValue()];
+                                curBlock[first.intValue()] = curBlock[second.intValue()];
+                                curBlock[second.intValue()] = temp;
+                            }
+                            // make the cipher text block by XORing the curBlock with the iv
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                            }
+                            writer.write(curBlock);
+                            System.arraycopy(curBlock, 0, lastBlock, 0, 16);
+                            ++blocksChained;  
                         }
                     }
-                    lastBlock = curBlock;
-                    ++blocksChained;
                 }
 
                 // this condition is true if the number of message bytes is a multiple of 16
-                // and needs a whole block at the end
+                // and needs a whole block of padding at the end
                 if (numBytesRead == -1) {
                     if (hasPad == false) {
-                        int padNumHex = 0x00 + 16;
-                        for (int i = 0 ; i < 16 ; ++i) {
-                            lastBlock[i] = (byte)padNumHex;
+                        if (blocksChained == 0) { // message was empty (use iv)
+                            int padNumHex = 0x00 + 16;
+                            for (int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte)padNumHex;
+                            }
+                            // applyb CBC by XORing the curBlock with iv (only since this is the first block)
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                            }
+                            // read next 16 bytes from keystream
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                                iv[i] = nextPsudoRandNum;
+                            }
+                            // shuffle the bytes based on the keystream data
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                BigInteger first = new BigInteger(Integer.toString((iv[i].intValue()) & (0xf)));
+                                BigInteger second = new BigInteger(Integer.toString((iv[i].intValue() >> 4) & (0xf)));
+                                byte temp = curBlock[first.intValue()];
+                                curBlock[first.intValue()] = curBlock[second.intValue()];
+                                curBlock[second.intValue()] = temp;
+                            }
+                            // make the cipher text block by XORing the curBlock with the iv
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                            }
+                            // write to the cipher file
+                            writer.write(curBlock);
+                        } else { // message was an even multiple of 16, can use lastBlock
+                            int padNumHex = 0x00 + 16;
+                            for (int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte)padNumHex;
+                            }
+                            // applyb CBC by XORing the curBlock with lastBlock (since this is NOT the first block)
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (lastBlock[i]));
+                            }
+                            // read next 16 bytes from keystream
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
+                                iv[i] = nextPsudoRandNum;
+                            }
+                            // shuffle the bytes based on the keystream data
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                BigInteger first = new BigInteger(Integer.toString((iv[i].intValue()) & (0xf)));
+                                BigInteger second = new BigInteger(Integer.toString((iv[i].intValue() >> 4) & (0xf)));
+                                byte temp = curBlock[first.intValue()];
+                                curBlock[first.intValue()] = curBlock[second.intValue()];
+                                curBlock[second.intValue()] = temp;
+                            }
+                            // make the cipher text block by XORing the curBlock with the iv
+                            for(int i = 0 ; i < 16 ; ++i) {
+                                curBlock[i] = (byte) ((curBlock[i]) ^ (iv[i].byteValue()));
+                            }
+                            writer.write(curBlock);
                         }
-                        writer.write(lastBlock);
                     }
                 }
-
             } while (numBytesRead != -1);
             scanner.close();
             writer.close();
@@ -158,21 +300,3 @@ public class sbencrypt {
     } // ends the getPsudoRandNum() method
 
 } // ends the sbencrypt class
-
-/*
-
-
-for (int i = 0; i < numBytesRead; ++i){
-                        int messageChar = (int)curBlock[i];
-                        String messageCharString = Integer.toString(messageChar);
-    
-                        BigInteger messageByte = new BigInteger(messageCharString);
-                        BigInteger xorVal = messageByte.xor(nextPsudoRandNum);
-    
-                        char byteToWrite = (char)xorVal.intValue();
-                        writer.write(byteToWrite);
-    
-                        nextPsudoRandNum = getPsudoRandNum(nextPsudoRandNum);
-                    }
-
-*/
