@@ -16,7 +16,7 @@ public class scrypt {
     public static void main(String[] args) {
         // make sure all the fileNames/pathToFiles are given
         if (args.length != 3) {
-            System.out.println("usage: java scrypt password plaintextfile ciphertextfile");
+            System.out.println("usage: java scrypt password plaintextfile/ciphertextfile ciphertextfile/plaintextfile");
             return;
         }
 
@@ -26,7 +26,7 @@ public class scrypt {
         
         // in case an empty key is given
         if (password.length() == 0) {
-            System.out.println("Empty password file.");
+            System.out.println("empty password file");
             return;
         } else {
             System.out.println("using seed=" + seed + " from password=\"" + args[0] + "\"");

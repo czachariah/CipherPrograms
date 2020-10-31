@@ -24,10 +24,10 @@ public class vdecrypt {
 
         // in case an empty key is given
         if (getKey.length() == 0) {
-            System.out.println("empty key file.");
+            System.out.println("empty key file");
             return;
         } else {
-            System.out.println("keyFile:" + args[0] + ", length: =" + getKey.length());
+            System.out.println("keyFile=" + args[0] + ", length=" + getKey.length());
         }
 
         // now read through the cipher, figure out the message using the key and print out to the message file

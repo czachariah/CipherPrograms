@@ -26,7 +26,7 @@ public class sbencrypt {
         
         // in case an empty key is given
         if (password.length() == 0) {
-            System.out.println("Empty password file.");
+            System.out.println("empty password file");
             return;
         } else {
             System.out.println("using seed=" + seed + " from password=\"" + args[0] + "\"");
